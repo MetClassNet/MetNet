@@ -1,8 +1,8 @@
 # MetNet
 
-[![Project Status: Active - The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
-[![build status](https://travis-ci.org/tnaake/MetNet.svg?branch=master)](https://travis-ci.org/tnaake/MetNet)
-[![codecov.io](http://codecov.io/github/tnaake/MetNet/coverage.svg?branch=master)](http://codecov.io/github/tnaake/MetNet?branch=master)
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![build status](https://github.com/MetClassNet/MetNet/workflows/R-CMD-check/badge.svg)](https://github.com/MetClassNet/MetNet/actions?query=workflow%3AR-CMD-check)
+![test-coverage](https://github.com/MetClassNet/MetNetworkflows/test-coverage/badge.svg)
 [![license](http://img.shields.io/badge/license-GPL%20%28%3E=%203%29-brightgreen.svg?style=flat)](http://www.gnu.org/licenses/gpl-3.0.html)
 [![BioC checks](http://bioconductor.org/checkResults/devel/bioc-LATEST/MetNet/malbec1-checksrc.html)](http://bioconductor.org/checkResults/devel/bioc-LATEST/MetNet/malbec1-checksrc.html)
 
