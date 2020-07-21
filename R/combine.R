@@ -168,26 +168,21 @@ combine <- function(structural, statistical, threshold = 1, model = "combined", 
 #' (TO DO: ADD "statistical")
 #' - "combine" produces a gml file with edge attributes containing correlation and p-values for pearson/ spearman correlations, 
 #' saved as "combined.gml"
-exportNet2gml <- function (x, from, ...) {
+exportNet2gml <- function (x, from, adjacency_list, ...) {
+    #Check arguments
+    if (!from %in% c("structural", "statistical+p", "combine"))
+        stop("type not in 'structural', 'statistical+p', 'combine'")
+    
     if ("structural" %in% from) {
         
         mat <- x[[1]]
-        mat_type <- x[[2]]
-        mat_mass <- x[[3]]
-        class(mat_mass) <- "numeric"
         net       <- 
-            graph_from_adjacency_matrix(mat, mode = "undirected", weighted = T)
-        net_type  <-
-            graph_from_adjacency_matrix(mat_type, mode = "undirected", weighted = T)
-        net_mass  <-
-            graph_from_adjacency_matrix(mat_mass, mode = "undirected", weighted = T)
-        net_comb  <- union(net, net_mass)
-        names(edge_attr(net_comb))[1] <- "adj"
-        names(edge_attr(net_comb))[2] <- "mass difference"
+            graph_from_adjacency_matrix(mat, mode = "undirected")
+        E(net)$sourceID <-  as.character(adjacency_list$`Var1`)
+        E(net)$targetID <-  as.character(adjacency_list$`Var2`)
+        E(net)$`mass difference` <-  adjacency_list$`mass difference`
         
-        #net_plot <- plot(net_type, edge.width = 5, vertex.label.cex = 0.5, edge.color = "grey")
-        
-        write_graph(net_comb, "structural_type.gml", format = c("gml"))
+        write_graph(net, "structural.gml", format = c("gml"))
     }
     else if ("statistical+p" %in% from) {
         
@@ -203,26 +198,37 @@ exportNet2gml <- function (x, from, ...) {
             names(edge_attr(net_comb))[2] <- "p"
             # #net_plot <- plot(net_type, edge.width = 5, vertex.label.cex = 0.5, edge.color = "grey")
             q <- names(x[i])
+            #E(net_cor)$`correlation_tst` <-  adjacency_list[,"pearson"]
+            
+            # rownames(cor_list[[1]])
             write_graph(net_comb, file = sprintf('statistical.%s.gml', q), format = c("gml"))
             
         }
         
+        
+        net <- graph_from_data_frame(adjacency_list, directed = TRUE, vertices = NULL)
+        E(net)$sourceID <-  as.character(adjacency_list$`Feature1`)
+        E(net)$targetID <-  as.character(adjacency_list$`Feature2`)
+        write_graph(net, file = "statistical.gml", format = c("gml"))
+        
+        
     }
+    
     else if ("combine" %in% from) {
         if ("pearson" %in% names(x[1]) | "spearman" %in% names(x[1]) ){
-            class(x[[3]]) <- "numeric"
-            class(x[[4]]) <- "numeric"
-            net_cor <- graph_from_adjacency_matrix(x[[3]], mode = "undirected", weighted = T)
-            net_p   <- graph_from_adjacency_matrix(x[[4]], mode = "undirected", weighted = T)
-            net     <- union(net_cor, net_p)
-            names(edge_attr(net))[1] <- "correlation"
-            names(edge_attr(net))[2] <- "p"
+            net <- graph_from_adjacency_matrix(x[[1]], mode = "undirected")
+            E(net)$sourceID <-  as.character(adjacency_list$`Var1`)
+            E(net)$targetID <-  as.character(adjacency_list$`Var2`)
+            E(net)$massdifference <-  adjacency_list$`value`
+            E(net)$correlation <-  adjacency_list$`Correlation Value`
         }
         else { #if "combined" or other model
             net       <- 
                 graph_from_adjacency_matrix(x[[1]], mode = "undirected", weighted = T)
+            
         }
         write_graph(net, "combined.gml", format = c("gml"))
+        
         
     }
 }
