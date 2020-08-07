@@ -353,6 +353,23 @@ correlation <- function(x, type = "pearson", use = "pairwise.complete.obs") {
     return(cor_mat)
 }
 
+#' correlation_p is an additional function (complementary to correlation()), and needed for positive/negative pearson/spearman
+#' correlation value and p-value calculation
+correlation_p <- function(x, type = "pearson", use = "pairwise.complete.obs") {
+    
+    ## for pearson/spearman correlation
+    if (type %in% c("pearson", "spearman")) {
+        cor_list <- rcorr(x = t(x), type = type)
+    }
+    
+    
+    names(cor_list) <- c("Correlation Value", "n", "p-Value")
+    ## exclude "n" column
+    cor_list <- cor_list[-2] 
+    
+    return(cor_list)
+}#
+
 #' @name bayes
 #'
 #' @aliases bayes
@@ -471,28 +488,30 @@ bayes <- function(x, algorithm = "tabu", R = 100, ...) {
 #' cor_spearman <- correlation(x, type = "spearman")
 #' l <- list(pearson = cor_pearson)
 #' MetNet:::addToList(l, "spearman", cor_spearman)
+#'Changes to MetNet: Not tested anymore if object is a matrix (since object is a list)
 addToList <- function(l, name, object) {
-
+    
     ## test validity of objects
     if (!is.list(l)) {
         stop("l is not a list")
     }
-
+    
     if (!is.character(name)) {
         stop("name is not a character")
     }
-
-    if (!is.matrix(object)) {
-        stop("object is not a matrix")
-    }
-
+    
+    ##left out since object could also be a list
+    # if (!is.matrix(object)) {
+    #   stop("object is not a matrix")
+    # }
+    
     ## add object to l
     new_index <- length(l) + 1
     l[[new_index]] <- object
-
+    
     ## assign the name to the newly added entry
     names(l)[new_index] <- name
-
+    
     return(l)
 }
 
@@ -559,26 +578,30 @@ addToList <- function(l, name, object) {
 #' statistical(x = x, model = c("pearson", "spearman"))
 #'
 #' @export
-statistical <- function(x, model, ...) {
-
+#'Changes to MetNet:
+#' additional attribute in funtion: p; default is FALSE (so works like MetNet), if p is TRUE and model is spearman/pearson
+#' than the output will contain lists of pearson/spearman containing the corresponding correlation values (INCLUDING positive 
+#' and negative values) and p-values
+statistical <- function(x, model, p = FALSE, ...) {
+    
     ## check if model complies with the implemented model and return error
     ## if not so
     if (!(all(model %in% c("lasso", "randomForest", "clr", "aracne",
-            "pearson", "pearson_partial", "pearson_semipartial",
-            "spearman", "spearman_partial", "spearman_semipartial", "bayes"))))
+                           "pearson", "pearson_partial", "pearson_semipartial",
+                           "spearman", "spearman_partial", "spearman_semipartial", "bayes"))))
         stop("'model' not implemented in statistical")
-
+    
     ## check if x is numeric matrix and return error if not so
     if (mode(x) != "numeric") stop("x is not a numerical matrix")
-
+    
     ## z-scale x and transpose
     x_z <- apply(x, 1, function(y) {
         (y - mean(y, na.rm = TRUE)) / sd(y, na.rm = TRUE)
     })
     x_z <- t(x_z)
-
+    
     l <- list()
-
+    
     ## add entry for lasso if "lasso" is in model
     if ("lasso" %in% model) {
         lasso <- lasso(x = x_z, ...)
@@ -586,7 +609,7 @@ statistical <- function(x, model, ...) {
         l <- addToList(l, "lasso", lasso)
         print("lasso finished")
     }
-
+    
     ## add entry for randomForest if "randomForest" is in model
     if ("randomForest" %in% model) {
         randomForest <- randomForest(x = x, ...)
@@ -594,13 +617,13 @@ statistical <- function(x, model, ...) {
         l <- addToList(l, "randomForest", randomForest)
         print("randomForest finished.")
     }
-
+    
     ## calculate mutual information if "clr" or "aracne" is in model
     if (any(c("clr", "aracne") %in% model)) {
         mi_x_z <- mpmi::cmi(t(x_z))$bcmi
         rownames(mi_x_z) <- colnames(mi_x_z) <- rownames(x)
     }
-
+    
     ## add entry for clr if "clr" is in model
     if ("clr" %in% model) {
         clr <- threeDotsCall("clr", mi = mi_x_z, ...)
@@ -608,7 +631,7 @@ statistical <- function(x, model, ...) {
         l <- addToList(l, "clr", clr)
         print("clr finished.")
     }
-
+    
     ## add entry for aracne if "aracne" is in model
     if ("aracne" %in% model) {
         aracne <- threeDotsCall("aracne", mi = mi_x_z, ...)
@@ -616,59 +639,85 @@ statistical <- function(x, model, ...) {
         l <- addToList(l, "aracne", aracne)
         print("aracne finished.")
     }
-
-    ## add entry for pearson if "pearson" is in model
-    if ("pearson" %in% model) {
+    
+    ## add entry for pearson if "pearson" is in mode
+    ## FALSE %in% p is default and corresponds to original MetNet function
+    if ("pearson" %in% model & FALSE %in% p) {
         pearson <- threeDotsCall("correlation", x = x, type = "pearson", ...)
         diag(pearson) <- NaN
         l <- addToList(l, "pearson", pearson)
         print("pearson finished.")
     }
-
+    
+    
     ## add entry for pearson_partial if "pearson_partial" is in model
     if ("pearson_partial" %in% model) {
         pearson_partial <- threeDotsCall("correlation", x = x,
-            type = "pearson_partial", ...)
+                                         type = "pearson_partial", ...)
         diag(pearson_partial) <- NaN
         l <- addToList(l, "pearson_partial", pearson_partial)
         print("pearson_partial finished.")
     }
-
+    
     ## add entry for pearson_semipartial if "pearson_semipartial" is in model
     if ("pearson_semipartial" %in% model) {
         pearson_sp <- threeDotsCall("correlation", x = x,
-            type = "pearson_semipartial", ...)
+                                    type = "pearson_semipartial", ...)
         diag(pearson_sp) <- NaN
         l <- addToList(l, "pearson_semipartial", pearson_sp)
         print("pearson_semipartial finished.")
     }
-
+    
     ## add entry for spearman if "spearman" is in model
-    if ("spearman" %in% model) {
+    ## FALSE %in% p is default and corresponds to original MetNet function
+    if ("spearman" %in% model & FALSE %in% p) {
         spearman <- threeDotsCall("correlation", x = x, type = "spearman", ...)
         diag(spearman) <- NaN
         l <- addToList(l, "spearman", spearman)
         print("spearman finished.")
     }
-
+    
     ## add entry for spearman_partial if "spearman_partial" is in model
     if ("spearman_partial" %in% model) {
         spearman_partial <- threeDotsCall("correlation", x = x,
-            type = "spearman_partial", ...)
+                                          type = "spearman_partial", ...)
         diag(spearman_partial) <- NaN
         l <- addToList(l, "spearman_partial", spearman_partial)
         print("spearman_partial finished.")
     }
-
+    
     ## add entry for spearman_semipartial if "spearman_semipartial" is in model
     if ("spearman_semipartial" %in% model) {
         spearman_sp <- threeDotsCall("correlation", x = x,
-            type = "spearman_semipartial", ...)
+                                     type = "spearman_semipartial", ...)
         diag(spearman_sp) <- NaN
         l <- addToList(l, "spearman_semipartial", spearman_sp)
         print("spearman_semipartial finished.")
     }
-
+    
+    ## add entry for pearson if "pearson" is in model and p=TRUE
+    ## Changed to MetNet: if p=TRUE, negative and positive correlation values were calculated and corresponding p-values
+    if ("pearson" %in% model & TRUE %in% p) {
+        pearson <- threeDotsCall("correlation_p", x = x, type = "pearson", ...)
+        #diag(pearson) <- NaN
+        diag(pearson[[1]]) <- NaN
+        diag(pearson[[2]]) <- NaN
+        l <- addToList(l, "pearson", pearson)
+        print("pearson finished.")
+    }
+    
+    ## add entry for pearson if "pearson" is in model and P=TRUE
+    ## Changed to MetNet: if p=TRUE, negative and positive correlation values were calculated and corresponding p-values
+    if ("spearman" %in% model & TRUE %in% p) {
+        spearman <- threeDotsCall("correlation_p", x = x, type = "spearman", ...)
+        #diag(spearman) <- NaN
+        diag(spearman[[1]]) <- NaN
+        diag(spearman[[2]]) <- NaN
+        l <- addToList(l, "spearman", spearman)
+        print("spearman finished.")
+    }
+    
+    
     ## add entry for bayes if "bayes" is in model
     if ("bayes" %in% model) {
         bayes <- threeDotsCall("bayes", x = x, ...)
@@ -676,7 +725,7 @@ statistical <- function(x, model, ...) {
         l <- addToList(l, "bayes", bayes)
         print("bayes finished.")
     }
-
+    
     return(l)
 }
 
@@ -828,103 +877,160 @@ getLinks <- function(mat, exclude = "== 1") {
 #' ## type = "mean"
 #' threshold(statistical = l, type = "mean", args = args)
 #' @export
+#'Changes to MetNet: new attribute for type: "threshold_p"
+#'A list is created instead of a single matrix as output containing 1/0 assigned values of 
+#'model matrices (e.g. pearson and spearman) and consensus matrix.
+#'
+#'If "treshold_p" is selected in 'type' all values are assigned to 1 if their p-value 
+#'is BELOW a defined threshold (defined in'args')
+#'If "treshold" is selected in 'type' all values are assigned to 1 if their Correlation-value 
+#'is ABOVE a defined threshold (defined in'args')
 threshold <- function(statistical, type, args,
-    values = c("all", "min", "max"), ...) {
-
+                      values = c("all", "min", "max"), ...) {
+    
     l <- statistical
     ## args, either N for tops
     ## or a list of threshold
     if (any(duplicated(names(args)))) {
         stop("names(args) contain duplicated entries")
     }
-
-    if (!type %in% c("top1", "top2", "mean", "threshold"))
-        stop("type not in 'top1', 'top2', 'mean', 'threshold'")
-
+    
+    ##Changes to MetNet: new attribute for type: "threshold_p"
+    if (!type %in% c("top1", "top2", "mean", "threshold", "threshold_p"))
+        stop("type not in 'top1', 'top2', 'mean', 'threshold', 'threshold_p'")
+    
     ## check args
     if (type %in% c("threshold")) {
         if (!(all(names(l) %in% names(args)))) {
             stop("'args' does not contain entries for all 'model's in ",
-                "'statistical'")
+                 "'statistical'")
         }
-
+        
         if (!"threshold" %in% names(args) && length(args$threshold) != 1) {
+            stop("'args' does not contain entry 'threshold' of length 1")
+        }
+    }
+    
+    ## check args
+    if (type %in% c("threshold")) {
+        if (!(all(names(l) %in% names(args)))) {
+            stop("'args' does not contain entries for all 'model's in ",
+                 "'statistical'")
+        }
+        
+        if (!"threshold" %in% names(args) && length(args$threshold) != 1) {
+            stop("'args' does not contain entry 'threshold' of length 1")
+        }
+    }
+    ## complementary to "threshold":
+    if (type %in% c("threshold_p")) {
+        if (!(all(names(l) %in% names(args)))) {
+            stop("'args' does not contain entries for all 'model's in ",
+                 "'statistical'")
+        }
+        
+        if (!"threshold_p" %in% names(args) && length(args$threshold) != 1) {
             stop("'args' does not contain entry 'threshold' of length 1")
         }
     }
     
     ## check match.arg for values
     values <- match.arg(values)
-
+    
     if (type %in% c("top1", "top2", "mean")) {
         if (!("n"  %in% names(args) && length(args$n) == 1 &&
-            is.numeric(args$n)))
+              is.numeric(args$n)))
             stop("args does not contain the numeric entry `n` of length 1")
     }
-
-    if (type == "threshold") {
+    
+    
+    
+    
+    if (type == "threshold" || type == "threshold_p") {
         ## iterate through the list and remove the links below or above the
         ## threshold and write to list
         l <- lapply(seq_along(l), function(x) {
-
+            
             ## find corresponding model in l
             name_x <- names(l)[x]
-
+            
             ## get corresponding threshold in args
             threshold_x <- args[[names(l)[x]]]
-
-            ## get corresponding adjacency matrix in l
-            l_x <- l[[name_x]]
-
-            ## for pearson/spearman correlation models (incl. partial and
-            ## semi-partial), lasso, randomForest, clr, aracne and bayes higher
-            ## values corresond to higher confidence
-            ## only assign 1 to values that are above the threshold
-            ifelse(l_x > threshold_x, 1, 0)
+            
+            ## Changed to MetNet
+            if ("threshold" %in% type) {
+                
+                if("Correlation Value" %in% names(l[[name_x]][1])) {
+                    ## get corresponding adjacency matrix of Correlation Values in l
+                    ## is used when statistical was calculated with p=TRUE
+                    l_x <- l[[name_x]]$`Correlation Value`
+                    
+                    ## only assign 1 to values that are above the threshold
+                    ifelse(l_x > threshold_x, 1, 0)
+                } 
+                else{
+                    ## get corresponding adjacency matrix in l
+                    ## corresponds to MetNet function
+                    l_x <- l[[name_x]]
+                    ## for pearson/spearman correlation models (incl. partial and
+                    ## semi-partial), lasso, randomForest, clr, aracne and bayes higher
+                    ## values corresond to higher confidence
+                    ## only assign 1 to values that are above the threshold
+                    ifelse(l_x > threshold_x, 1, 0)
+                }
+            }
+            else if("threshold_p" %in% type){
+                ## get corresponding adjacency matrix of p-Values in l
+                ## is used when statistical was calculated with p=TRUE
+                l_x <- l[[name_x]]$`p-Value`
+                ## only assign 1 to values that are below the threshold
+                ifelse(l_x < threshold_x, 1, 0)
+            }      
+            
         })
-
+        
         ## allow for compatibility of arguments
         ## calculate consenses from the binary matrices
         cons <- threeDotsCall(sna::consensus, dat = l, ...)
-
+        
         ## threshold consensus that it is a binary matrix
         cons <- ifelse(cons >= args$threshold, 1, 0)
-
+        
         rownames(cons) <- colnames(cons) <- colnames(l[[1]])
-
-    } else { ## if type is in "top1", "top2" or "mean"
+    } 
+    else { ## if type is in "top1", "top2" or "mean"
         l_df <- lapply(seq_along(l), function(x) {
-
+            
             ## find corresponding model in l
             name_x <- names(l)[x]
-
+            
             ## get corresponding adjacency matrix in l
             l_x <- l[[name_x]]
-
+            
             ## take the respective minimum or maximum depending on `values`,
             ## do not do anything if `values` is equal to `all`
             if (values %in% c("min", "max")) {
-
+                
                 ## get values from the lower triangle
                 lower_tri <- l_x[lower.tri(l_x)]
-
+                
                 ## get values from the upper triangle (requires transposing)
                 l_x_t <- t(l_x)
                 upper_tri <- l_x_t[lower.tri(l_x_t)]
-
+                
                 ## get min of lower_tri and upper_tri
                 if (values == "min") {
                     values <- apply(rbind(lower_tri, upper_tri), 2, min)
                 } else {
                     values <- apply(rbind(lower_tri, upper_tri), 2, max)
                 }
-
+                
                 ## write back to the matrix
                 l_x[lower.tri(l_x)] <- values
                 l_x <- t(l_x)
                 l_x[lower.tri(l_x)] <- values
             }
-
+            
             ## for pearson/spearman correlation (incl. partial and
             ## semi-partial), lasso, randomForest, clr, aracne and bayes
             ## higher values corresond to higher confidence
@@ -936,40 +1042,44 @@ threshold <- function(statistical, type, args,
             if (grepl(name_x, pattern = "pearson|spearman|clr|aracne")) {
                 res <- getLinks(l_x, exclude = NULL)
             }
-
+            
             res
         })
-
+        
         names(l_df) <- names(l)
-
+        
         ## bind together the ranks of the models, stored in l_df
         ranks <- lapply(l_df, function(x) x$rank)
         ranks <- do.call("cbind", ranks)
         colnames(ranks) <- names(l_df)
-
+        
         ## calculate the consensus information, i.e. either get the first or
         ## second top rank per row or calculate the average across rows
         ## depending on the type argument
-        cons_val <- topKnet(ranks, type)
-
+        cons_val <- MetNet:::topKnet(ranks, type)
+        
         ## bind row and col information with cons information
         row_col <- l_df[[1]][, c("row", "col")]
         ranks <- cbind(row_col, cons_val)
-
+        
         ## get the top N features
         n <- args$n
         top_n <- sort(unique(cons_val))[1:n]
         ranks_top <- ranks[cons_val %in% top_n, ]
-
+        
         ## write links in ranks_top to binary adjacency matrix cons
         cons <- matrix(0, nrow = ncol(l[[1]]), ncol = ncol(l[[1]]))
         rownames(cons) <- colnames(cons) <- colnames(l[[1]])
         cons[as.numeric(rownames(ranks_top))] <- 1
-
+        
     }
-
-    return(cons)
-
+    
+    ## Changes to MetNet: A list is created as output containing 1/0 assigned values of 
+    ## model matrices (e.g. pearson and spearman) and consensus matrix
+    names(l) <- names(statistical)
+    l[["Consensus"]] <- cons
+    class(l[[3]]) <- "numeric"
+    return(l)
 }
     
 #' @name topKnet
