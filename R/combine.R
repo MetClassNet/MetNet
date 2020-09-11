@@ -288,8 +288,8 @@ adjacency_list <- function(x, from){
         x[[2]][upper.tri(x[[2]])] <- ''
         x[[3]][upper.tri(x[[3]])] <- ''
         
-        list_type <- melt(x[[2]]) %>% filter(Var1 != Var2) %>% filter(value != '')
-        list_mass <- melt(x[[3]]) %>% filter(Var1 != Var2) %>% filter(value != '')
+        list_type <- reshape2::melt(x[[2]]) %>% filter(Var1 != Var2) %>% filter(value != '')
+        list_mass <- reshape2::melt(x[[3]]) %>% filter(Var1 != Var2) %>% filter(value != '')
         combine <- merge(list_type, list_mass, by = c("Var1", "Var2"))
         colnames(combine) <- c("Var1", "Var2", "value", "mass difference")
         return(combine)
@@ -306,7 +306,7 @@ adjacency_list <- function(x, from){
             if (i != 1){
                 model = names(x[i])
                 x[[i]][upper.tri(x[[i]])] <- ''
-                list_corr2 <- melt(x[[i]]) %>% filter(Var1 != Var2) %>% filter(value != '')
+                list_corr2 <- reshape2::melt(x[[i]]) %>% filter(Var1 != Var2) %>% filter(value != '')
                 list_comb <- add_column(list_corr, list_corr2$value)
                 list_comb <- as.data.frame(list_comb) 
                 colnames(list_comb)[i+2] <- c(names(x[i]))
@@ -320,9 +320,9 @@ adjacency_list <- function(x, from){
         x[[3]][upper.tri(x[[3]])] <- ''
         x[[4]][upper.tri(x[[4]])] <- ''
         
-        list_mass <- melt(x[[2]]) %>% filter(Var1 != Var2) %>% filter(value != '')
-        list_corr <- melt(x[[3]]) %>% filter(Var1 != Var2) %>% filter(value != '')
-        list_p    <- melt(x[[4]]) %>% filter(Var1 != Var2) %>% filter(value != '')
+        list_mass <- reshape2::melt(x[[2]]) %>% filter(Var1 != Var2) %>% filter(value != '')
+        list_corr <- reshape2::melt(x[[3]]) %>% filter(Var1 != Var2) %>% filter(value != '')
+        list_p    <- reshape2::melt(x[[4]]) %>% filter(Var1 != Var2) %>% filter(value != '')
         combine <- merge(list_mass, list_corr, by = c("Var1", "Var2"))
         colnames(combine) <- c("Var1", "Var2", "value", "Correlation Value")
         combine <- merge(combine, list_p, by = c("Var1", "Var2"))
