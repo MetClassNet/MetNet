@@ -358,12 +358,19 @@ correlation <- function(x, type = "pearson", use = "pairwise.complete.obs") {
 correlation_p <- function(x, type = "pearson", use = "pairwise.complete.obs") {
     
     ## for pearson/spearman correlation
-    if (type %in% c("pearson", "spearman")) {
+    if (type %in% c("spearman")) {
         cor_list <- rcorr(x = t(x), type = type)
+        names(cor_list) <- c("spearman_corr", "spearman_n", "spearman_p")
+        
+    }
+    ## for pearson/spearman correlation
+    if (type %in% c("pearson")) {
+        cor_list <- rcorr(x = t(x), type = type)
+        names(cor_list) <- c("pearson_corr", "pearson_n", "pearson_p")
+        
     }
     
     
-    names(cor_list) <- c("Correlation Value", "n", "p-Value")
     ## exclude "n" column
     cor_list <- cor_list[-2] 
     
@@ -702,7 +709,8 @@ statistical <- function(x, model, p = FALSE, ...) {
         #diag(pearson) <- NaN
         diag(pearson[[1]]) <- NaN
         diag(pearson[[2]]) <- NaN
-        l <- addToList(l, "pearson", pearson)
+        l <- addToList(l, object = pearson[[1]], name = "pearson_corr")
+        l <- addToList(l, object = pearson[[2]], name = "pearson_p")
         print("pearson finished.")
     }
     
@@ -713,7 +721,9 @@ statistical <- function(x, model, p = FALSE, ...) {
         #diag(spearman) <- NaN
         diag(spearman[[1]]) <- NaN
         diag(spearman[[2]]) <- NaN
-        l <- addToList(l, "spearman", spearman)
+        
+        l <- addToList(l, object = spearman[[1]], name = "spearman_corr")
+        l <- addToList(l, object = spearman[[2]], name = "spearman_p")
         print("spearman finished.")
     }
     
