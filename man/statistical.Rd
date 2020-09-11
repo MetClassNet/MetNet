@@ -4,7 +4,7 @@
 \alias{statistical}
 \title{Create a list of adjacency matrices from statistical methods}
 \usage{
-statistical(x, model, ...)
+statistical(x, model, p = FALSE, ...)
 }
 \arguments{
 \item{x}{`matrix` that contains intensity values of

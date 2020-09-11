@@ -33,6 +33,7 @@ cor_pearson <- correlation(x, type = "pearson")
 cor_spearman <- correlation(x, type = "spearman")
 l <- list(pearson = cor_pearson)
 MetNet:::addToList(l, "spearman", cor_spearman)
+Changes to MetNet: Not tested anymore if object is a matrix (since object is a list)
 }
 \author{
 Thomas Naake, \email{thomasnaake@googlemail.com}

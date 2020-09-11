@@ -4,7 +4,13 @@
 \alias{combine}
 \title{Combine structural and statistical adjacency matrix}
 \usage{
-combine(structural, statistical, threshold = 1)
+combine(
+  structural,
+  statistical,
+  threshold = 1,
+  model = "combined",
+  weighted_statistical
+)
 }
 \arguments{
 \item{structural}{list containing `numeric` structural adjacency matrix in
@@ -30,6 +36,14 @@ steps, adds them together and will report a connection between metabolites
 in the returned when the sum exceeds the `threshold`.
 \code{combine} returns this consensus matrix supported
 by the structural and statistical adjacency matrices.
+
+Changes to MetNet: New attributes added, if model = "combined" (default) the result will be the same 
+as in MetNet, except the output list items were named to "combined" and "Character" 
+if model = "pearson" or "spearman" than also the corresponding weighted statistical 
+adjacency matrix is required as attribute (weighted_statistical = XY)
+The output in this case will be a list containing 4 listitems, where combination relies on the
+unweighted adjacency matrix of either Pearson or Spearman. 
+Moreover corresponding Correlation and p-values will be displayes as listitems
 }
 \details{
 The matrices will be added and a unweighted connection will
