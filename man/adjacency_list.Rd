@@ -22,7 +22,7 @@ The function `adjacency_list` creates a dataframe from the adjacency matrix.
 Unique values are displayed by the dataframe. Missing values and the upper triangle of 
 the adjacency matrix are left out.
 The function returns a dataframe containing different column outputs depending 
-on the source `from` of the adjacency matrix.
+on the source of the adjacency matrix, which is defined by `from`.
 }
 \details{
 The function `adjacency_list` includes functionality to generate a dataframe from
