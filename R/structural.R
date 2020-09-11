@@ -11,6 +11,8 @@
 #' loss/addition of functional groups. `structural` returns
 #' the unweighted `numeric` `matrix` together with a `character` `matrix` with
 #' the type of loss/addition as a list at the specific positions.
+#' Changes to MetNet:
+#' structural() has additional list entry of matrix containing mass values of respective matches
 #'
 #' @param
 #' x `matrix`, where columns are the samples and the rows are features
@@ -62,9 +64,6 @@
 #' struct_adj <- structural(x_test, transformation, ppm = 5, directed = TRUE)
 #'
 #' @export
-#' #' Changes to MetNet:
-#' structural() has additional list entry of matrix containing mass values of respective matches
-#' 
 structural <- function(x, transformation, ppm = 5, directed = FALSE) {
     
     if (!is.data.frame(transformation))

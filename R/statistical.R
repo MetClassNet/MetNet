@@ -538,6 +538,10 @@ addToList <- function(l, name, object) {
 #' semipartial), Spearman correlation (also partial and semipartial)
 #' and score-based structure learning (Bayes). The function returns a
 #' list of adjacency matrices that are defined by `model`.
+#' Changes to MetNet:
+#' additional attribute in funtion: p; default is FALSE (so works like MetNet), if p is TRUE and model is spearman/pearson
+#' than the output will contain lists of pearson/spearman containing the corresponding correlation values (INCLUDING positive 
+#' and negative values) and p-values
 #'
 #' @param
 #' x `matrix` that contains intensity values of
@@ -585,10 +589,6 @@ addToList <- function(l, name, object) {
 #' statistical(x = x, model = c("pearson", "spearman"))
 #'
 #' @export
-#'Changes to MetNet:
-#' additional attribute in funtion: p; default is FALSE (so works like MetNet), if p is TRUE and model is spearman/pearson
-#' than the output will contain lists of pearson/spearman containing the corresponding correlation values (INCLUDING positive 
-#' and negative values) and p-values
 statistical <- function(x, model, p = FALSE, ...) {
     
     ## check if model complies with the implemented model and return error

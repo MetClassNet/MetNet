@@ -32,6 +32,10 @@ cellular networks (ARACNE), Pearson correlation (also partial and
 semipartial), Spearman correlation (also partial and semipartial)
 and score-based structure learning (Bayes). The function returns a
 list of adjacency matrices that are defined by `model`.
+Changes to MetNet:
+additional attribute in funtion: p; default is FALSE (so works like MetNet), if p is TRUE and model is spearman/pearson
+than the output will contain lists of pearson/spearman containing the corresponding correlation values (INCLUDING positive 
+and negative values) and p-values
 }
 \details{
 The function `statistical` includes functionality to calculate adjacency

@@ -37,6 +37,8 @@ adjacency matrix using differences in m/z values that are matched against a
 loss/addition of functional groups. `structural` returns
 the unweighted `numeric` `matrix` together with a `character` `matrix` with
 the type of loss/addition as a list at the specific positions.
+Changes to MetNet:
+structural() has additional list entry of matrix containing mass values of respective matches
 }
 \details{
 `structural` accesses the column `"mz"` of
