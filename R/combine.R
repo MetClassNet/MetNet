@@ -299,7 +299,7 @@ adjacency_list <- function(x, from){
         for (i in seq_along(x)) {
             if (i == 1) {
                 x[[i]][upper.tri(x[[i]])] <- ''
-                list_corr <- melt(x[[i]]) %>% filter(Var1 != Var2) %>% filter(value != '') %>% 
+                list_corr <- reshape2::melt(x[[i]]) %>% filter(Var1 != Var2) %>% filter(value != '') %>% 
                     select(Var1, Var2, value) 
                 colnames(list_corr) <- c("Var1", "Var2", names(x[i]))
             }
