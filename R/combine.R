@@ -385,11 +385,6 @@ sum_mass <- function(adjacency_list){
         colnames(sum_comb) <- c("Type", "Counts")
         
     }
-    
-    plot_list <- ggplot(sum_comb, aes(x=Type, y=Counts, fill=Type)) + geom_bar(stat = "identity") + theme_minimal() + 
-        labs(title = "Numbers of destinct type of a biochemical reaction")+ scale_fill_brewer(palette = "Blues") + theme(legend.position = "right")
-    plot(plot_list)
-    
     return(sum_comb)
 }
 
