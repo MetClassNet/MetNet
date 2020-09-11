@@ -68,6 +68,15 @@ For `type = "top2"`, the second best (i.e. second lowest) rank in
 `statistical` is taken.
 For `type = "mean"`, the average rank in `statistical` is taken.
 Subsequently the first `n` unique ranks are returned.
+
+Changes to MetNet: new attribute for type: "threshold_p"
+A list is created instead of a single matrix as output containing 1/0 assigned values of 
+model matrices (e.g. pearson and spearman) and consensus matrix.
+
+If "treshold_p" is selected in 'type' all values are assigned to 1 if their p-value 
+is BELOW a defined threshold (defined in'args')
+If "treshold" is selected in 'type' all values are assigned to 1 if their Correlation-value 
+is ABOVE a defined threshold (defined in'args')
 }
 \examples{
 data("x_test", package = "MetNet")
