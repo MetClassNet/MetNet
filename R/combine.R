@@ -290,7 +290,8 @@ adjacency_list <- function(x, from){
         
         list_type <- melt(x[[2]]) %>% filter(Var1 != Var2) %>% filter(value != '')
         list_mass <- melt(x[[3]]) %>% filter(Var1 != Var2) %>% filter(value != '')
-        combine <- add_column(list_type,  `mass difference`= list_mass$value) %>% as.data.frame()
+        combine <- merge(list_type, list_mass, by = c("Var1", "Var2"))
+        colnames(combine) <- c("Var1", "Var2", "value", "mass difference")
         return(combine)
     }
     else if ("statistical" %in% from) {
@@ -322,9 +323,11 @@ adjacency_list <- function(x, from){
         list_mass <- melt(x[[2]]) %>% filter(Var1 != Var2) %>% filter(value != '')
         list_corr <- melt(x[[3]]) %>% filter(Var1 != Var2) %>% filter(value != '')
         list_p    <- melt(x[[4]]) %>% filter(Var1 != Var2) %>% filter(value != '')
-        listed <- add_column(list_mass, `Correlation Value` = list_corr$value)
-        listed <- add_column(listed, `p-Value` = list_p$value)
-        return(listed)
+        combine <- merge(list_mass, list_corr, by = c("Var1", "Var2"))
+        colnames(combine) <- c("Var1", "Var2", "value", "Correlation Value")
+        combine <- merge(combine, list_p, by = c("Var1", "Var2"))
+        colnames(combine) <- c("Var1", "Var2", "value", "Correlation Value", "p-Value")
+        return(combine)
         
     }
     
