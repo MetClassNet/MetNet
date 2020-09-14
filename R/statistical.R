@@ -968,7 +968,7 @@ threshold <- function(statistical, type, args,
                 else{
                     ## get corresponding adjacency matrix in l
                     ## corresponds to MetNet function
-                    l_x <- l[[^name_x]]
+                    l_x <- l[[name_x]]
                     ## for pearson/spearman correlation models (incl. partial and
                     ## semi-partial), lasso, randomForest, clr, aracne and bayes higher
                     ## values corresond to higher confidence
