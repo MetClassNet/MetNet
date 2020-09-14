@@ -914,7 +914,9 @@ threshold <- function(statistical, type, args,
     
     ## check args
     if (type %in% c("threshold")) {
-        if (!(all(names(l) %in% names(args)))) {
+        if (!(all(names(l) %in% names(args))) || !(any(c("pearson_corr",
+                                                         "spearman_corr"))
+                                                   %in% names(l)){
             stop("'args' does not contain entries for all 'model's in ",
                  "'statistical'")
         }
