@@ -355,17 +355,18 @@ correlation <- function(x, type = "pearson", use = "pairwise.complete.obs") {
 
 #' correlation_p is an additional function (complementary to correlation()), and needed for positive/negative pearson/spearman
 #' correlation value and p-value calculation
+#' @details dependencies: Hmisc package
 correlation_p <- function(x, type = "pearson", use = "pairwise.complete.obs") {
     
     ## for pearson/spearman correlation
     if (type %in% c("spearman")) {
-        cor_list <- rcorr(x = t(x), type = type)
+        cor_list <- Hmisc::rcorr(x = t(x), type = type)
         names(cor_list) <- c("spearman_corr", "spearman_n", "spearman_p")
         
     }
     ## for pearson/spearman correlation
     if (type %in% c("pearson")) {
-        cor_list <- rcorr(x = t(x), type = type)
+        cor_list <- Hmisc::rcorr(x = t(x), type = type)
         names(cor_list) <- c("pearson_corr", "pearson_n", "pearson_p")
         
     }
@@ -910,17 +911,6 @@ threshold <- function(statistical, type, args,
     if (!type %in% c("top1", "top2", "mean", "threshold", "threshold_p"))
         stop("type not in 'top1', 'top2', 'mean', 'threshold', 'threshold_p'")
     
-    ## check args
-    if (type %in% c("threshold")) {
-        if (!(all(names(l) %in% names(args)))) {
-            stop("'args' does not contain entries for all 'model's in ",
-                 "'statistical'")
-        }
-        
-        if (!"threshold" %in% names(args) && length(args$threshold) != 1) {
-            stop("'args' does not contain entry 'threshold' of length 1")
-        }
-    }
     
     ## check args
     if (type %in% c("threshold")) {
