@@ -11,3 +11,6 @@ correlation_p(x, type = "pearson", use = "pairwise.complete.obs")
 correlation_p is an additional function (complementary to correlation()), and needed for positive/negative pearson/spearman
 correlation value and p-value calculation
 }
+\details{
+dependencies: Hmisc package
+}

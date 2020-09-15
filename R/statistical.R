@@ -728,6 +728,10 @@ statistical <- function(x, model, p = FALSE, ...) {
         print("spearman finished.")
     }
     
+    if (TRUE %in% p & model != "spearman" || model != "pearson") {
+        stop("'model' not implemented in statistical(p = TRUE)")
+    }
+    
     
     ## add entry for bayes if "bayes" is in model
     if ("bayes" %in% model) {

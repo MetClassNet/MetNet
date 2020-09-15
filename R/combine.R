@@ -388,6 +388,58 @@ sum_mass <- function(adjacency_list){
     return(sum_comb)
 }
 
+#'
+#'
+#'@export
+summary_mz <- function(adjacency_list, filter = F, ...){
+    if("mass difference" %in% names(adjacency_list)){
+        sum_mass <- adjacency_list %>% group_by(`mass difference`) %>% summarise(count=n()) %>%
+            as.data.frame()
+        sum_comb <- adjacency_list %>% group_by(`value`) %>% summarise(count=n()) %>%
+            as.data.frame()  %>% add_column(sum_mass$`mass difference`)
+        colnames(sum_comb) <- c("Type", "Counts", "Mass Difference")
+        sum_comb <- sum_comb %>% select(Type, `Mass Difference`, Counts)}
+    else{
+        sum_comb <- adjacency_list %>% group_by(`value`) %>% summarise(count=n()) %>%
+            as.data.frame()
+        colnames(sum_comb) <- c("Type", "Counts")
+        
+    }
+    
+    
+    if (F == filter) {
+        plot_list <- ggplot(sum_comb, aes(x=Type, y=Counts)) + 
+            geom_bar(stat = "identity") + 
+            theme_minimal() + 
+            coord_flip() + 
+            labs(title = "Numbers of determined mass differences")
+        
+        plot(plot_list)
+        
+        return(sum_comb)
+    }
+    
+    else if (F != filter) {
+        sum_f <- filter(sum_comb,sum_combf$Counts >= filter)
+        plot_list_f <- ggplot(sum_f, aes(x=Type, y=Counts)) + 
+            geom_bar(stat = "identity") + 
+            theme_minimal() + 
+            coord_flip() + 
+            labs(title = "Numbers of determined mass differences", 
+                 subtitle = "(filtered)")
+        
+        plot(plot_list_f)
+        
+        return(sum_f)
+        
+    }
+    
+   
+}
+
+
+
+
 
 
 #' @name annotaionNames 
