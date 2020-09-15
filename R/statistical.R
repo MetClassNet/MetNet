@@ -602,6 +602,14 @@ statistical <- function(x, model, p = FALSE, ...) {
     ## check if x is numeric matrix and return error if not so
     if (mode(x) != "numeric") stop("x is not a numerical matrix")
     
+    if (TRUE %in% p){
+        #if (model != "spearman" || model != "pearson")
+           # stop("'model' not implemented in statistical(p = TRUE)")
+        
+        if (!(all(model %in% c("pearson", "spearman"))))
+            stop("'model' not implemented in statistical")
+    }
+    
     ## z-scale x and transpose
     x_z <- apply(x, 1, function(y) {
         (y - mean(y, na.rm = TRUE)) / sd(y, na.rm = TRUE)
@@ -726,10 +734,6 @@ statistical <- function(x, model, p = FALSE, ...) {
         l <- addToList(l, object = spearman[[1]], name = "spearman_corr")
         l <- addToList(l, object = spearman[[2]], name = "spearman_p")
         print("spearman finished.")
-    }
-    
-    if (TRUE %in% p & model != "spearman" || model != "pearson") {
-        stop("'model' not implemented in statistical(p = TRUE)")
     }
     
     

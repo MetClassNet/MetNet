@@ -407,7 +407,7 @@ summary_mz <- function(adjacency_list, filter = F, ...){
     }
     
     
-    if (F == filter) {
+    if (filter == F) {
         plot_list <- ggplot(sum_comb, aes(x=Type, y=Counts)) + 
             geom_bar(stat = "identity") + 
             theme_minimal() + 
@@ -419,8 +419,8 @@ summary_mz <- function(adjacency_list, filter = F, ...){
         return(sum_comb)
     }
     
-    else if (F != filter) {
-        sum_f <- filter(sum_comb,sum_combf$Counts >= filter)
+    else if (filter != F) {
+        sum_f <- filter(sum_comb,sum_comb$Counts >= filter)
         plot_list_f <- ggplot(sum_f, aes(x=Type, y=Counts)) + 
             geom_bar(stat = "identity") + 
             theme_minimal() + 
