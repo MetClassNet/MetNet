@@ -243,8 +243,6 @@ adjacency_list <- function(x, from){
                 x[[i]][upper.tri(x[[i]])] <- ''
                 list_corr2 <- reshape2::melt(x[[i]]) %>% filter(Var1 != Var2) %>% filter(value != '')
                 list_comb <- merge(list_corr, list_corr2, by = c("Var1", "Var2") )
-                #list_comb <- add_column(list_corr, list_corr2$value)
-                #list_comb <- as.data.frame(list_comb) 
                 colnames(list_comb)[i+2] <- c(names(x[i]))
                 list_corr <- list_comb
             } 
