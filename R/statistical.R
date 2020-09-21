@@ -718,7 +718,7 @@ statistical <- function(x, model, p = FALSE, ...) {
         #diag(pearson) <- NaN
         diag(pearson[[1]]) <- NaN
         diag(pearson[[2]]) <- NaN
-        l <- addToList(l, object = pearson[[1]], name = "pearson_corr")
+        l <- addToList(l, object = pearson[[1]], name = "pearson")
         l <- addToList(l, object = pearson[[2]], name = "pearson_p")
         print("pearson finished.")
     }
@@ -731,7 +731,7 @@ statistical <- function(x, model, p = FALSE, ...) {
         diag(spearman[[1]]) <- NaN
         diag(spearman[[2]]) <- NaN
         
-        l <- addToList(l, object = spearman[[1]], name = "spearman_corr")
+        l <- addToList(l, object = spearman[[1]], name = "spearman")
         l <- addToList(l, object = spearman[[2]], name = "spearman_p")
         print("spearman finished.")
     }
@@ -905,7 +905,258 @@ getLinks <- function(mat, exclude = "== 1") {
 #' ## type = "mean"
 #' threshold(statistical = l, type = "mean", args = args)
 #' @export
-threshold <- function(statistical, type, args,
+threshold <- function(statistical, type, args, 
+                      values = c("all", "min", "max"), ...){
+
+      if( TRUE %in% any(endsWith(names(statistical), "_p" && type != "threshold_p"))) {
+      l <- statistical[!endsWith(names(statistical), "_p")]
+   }
+  
+  else{l <- statistical}
+  ## args, either N for tops
+  ## or a list of threshold
+  if (type != "threshold_p"){
+    
+  if (any(duplicated(names(args)))) {
+    stop("names(args) contain duplicated entries")
+  }
+  
+  if (!type %in% c("top1", "top2", "mean", "threshold"))
+    stop("type not in 'top1', 'top2', 'mean', 'threshold'")
+  
+  ## check args
+  if (type %in% c("threshold")) {
+    if (!(all(names(l) %in% names(args)))) {
+      stop("'args' does not contain entries for all 'model's in ",
+           "'statistical'")
+    }
+    
+    if (!"threshold" %in% names(args) && length(args$threshold) != 1) {
+      stop("'args' does not contain entry 'threshold' of length 1")
+    }
+  }
+  
+  ## check match.arg for values
+  values <- match.arg(values)
+  
+  if (type %in% c("top1", "top2", "mean")) {
+    if (!("n"  %in% names(args) && length(args$n) == 1 &&
+          is.numeric(args$n)))
+      stop("args does not contain the numeric entry `n` of length 1")
+  }
+  }
+  
+  if (type == "threshold" || type == "threshold_p") {
+    ## iterate through the list and remove the links below or above the
+    ## threshold and write to list
+    l <- lapply(seq_along(l), function(x) {
+      
+      ## find corresponding model in l
+      name_x <- names(l)[x]
+      
+      ## get corresponding threshold in args
+      threshold_x <- args[[names(l)[x]]]
+      
+      ## Changed to MetNet
+      if ("threshold" %in% type) {
+        
+        if( TRUE %in% any(endsWith(names(l), "_p"))) {
+          ## get corresponding adjacency matrix of Correlation Values in l
+          ## is used when statistical was calculated with p=TRUE
+          li <- l[endsWith(names(l), "corr")]
+          l_x <- li[[name_x]]
+          
+          ## only assign 1 to values that are above the threshold
+          ifelse(l_x > threshold_x, 1, 0)
+        } 
+        else{
+          ## get corresponding adjacency matrix in l
+          ## corresponds to MetNet function
+          l_x <- l[[name_x]]
+          ## for pearson/spearman correlation models (incl. partial and
+          ## semi-partial), lasso, randomForest, clr, aracne and bayes higher
+          ## values corresond to higher confidence
+          ## only assign 1 to values that are above the threshold
+          ifelse(l_x > threshold_x, 1, 0)
+        }
+      }
+      else if("threshold_p" %in% type){
+        ## get corresponding adjacency matrix of p-Values in l
+        ## is used when statistical was calculated with p=TRUE
+        name_x <- name_x[grep("_p", names(name_x))]
+        l_x <- l[[name_x]]
+        ## only assign 1 to values that are below the threshold
+        ifelse(l_x < threshold_x, 1, 0)
+      }      
+      
+    })
+  else { ## if type is in "top1", "top2" or "mean"
+    l_df <- lapply(seq_along(l), function(x) {
+      
+      ## find corresponding model in l
+      name_x <- names(l)[x]
+      
+      ## get corresponding adjacency matrix in l
+      l_x <- l[[name_x]]
+      
+      ## take the respective minimum or maximum depending on `values`,
+      ## do not do anything if `values` is equal to `all`
+      if (values %in% c("min", "max")) {
+        
+        ## get values from the lower triangle
+        lower_tri <- l_x[lower.tri(l_x)]
+        
+        ## get values from the upper triangle (requires transposing)
+        l_x_t <- t(l_x)
+        upper_tri <- l_x_t[lower.tri(l_x_t)]
+        
+        ## get min of lower_tri and upper_tri
+        if (values == "min") {
+          values <- apply(rbind(lower_tri, upper_tri), 2, min)
+        } else {
+          values <- apply(rbind(lower_tri, upper_tri), 2, max)
+        }
+        
+        ## write back to the matrix
+        l_x[lower.tri(l_x)] <- values
+        l_x <- t(l_x)
+        l_x[lower.tri(l_x)] <- values
+      }
+      
+      ## for pearson/spearman correlation (incl. partial and
+      ## semi-partial), lasso, randomForest, clr, aracne and bayes
+      ## higher values corresond to higher confidence
+      if (grepl(name_x, pattern = "lasso|randomForest|bayes")) {
+        ## set values that are equal to 0 to NaN (values that are 0)
+        ## do not explain the variability
+        res <- getLinks(l_x, exclude = "== 0")
+      }
+      if (grepl(name_x, pattern = "pearson|spearman|clr|aracne")) {
+        res <- getLinks(l_x, exclude = NULL)
+      }
+      
+      res
+    })
+    
+    names(l_df) <- names(l)
+    
+    ## bind together the ranks of the models, stored in l_df
+    ranks <- lapply(l_df, function(x) x$rank)
+    ranks <- do.call("cbind", ranks)
+    colnames(ranks) <- names(l_df)
+    
+    ## calculate the consensus information, i.e. either get the first or
+    ## second top rank per row or calculate the average across rows
+    ## depending on the type argument
+    cons_val <- topKnet(ranks, type)
+    
+    ## bind row and col information with cons information
+    row_col <- l_df[[1]][, c("row", "col")]
+    ranks <- cbind(row_col, cons_val)
+    
+    ## get the top N features
+    n <- args$n
+    top_n <- sort(unique(cons_val))[1:n]
+    ranks_top <- ranks[cons_val %in% top_n, ]
+    
+    ## write links in ranks_top to binary adjacency matrix cons
+    cons <- matrix(0, nrow = ncol(l[[1]]), ncol = ncol(l[[1]]))
+    rownames(cons) <- colnames(cons) <- colnames(l[[1]])
+    cons[as.numeric(rownames(ranks_top))] <- 1
+    
+  }
+  
+  return(cons)
+  
+  }
+  else { ## if type is in "top1", "top2" or "mean"
+    l_df <- lapply(seq_along(l), function(x) {
+      
+      ## find corresponding model in l
+      name_x <- names(l)[x]
+      
+      ## get corresponding adjacency matrix in l
+      l_x <- l[[name_x]]
+      
+      ## take the respective minimum or maximum depending on `values`,
+      ## do not do anything if `values` is equal to `all`
+      if (values %in% c("min", "max")) {
+        
+        ## get values from the lower triangle
+        lower_tri <- l_x[lower.tri(l_x)]
+        
+        ## get values from the upper triangle (requires transposing)
+        l_x_t <- t(l_x)
+        upper_tri <- l_x_t[lower.tri(l_x_t)]
+        
+        ## get min of lower_tri and upper_tri
+        if (values == "min") {
+          values <- apply(rbind(lower_tri, upper_tri), 2, min)
+        } else {
+          values <- apply(rbind(lower_tri, upper_tri), 2, max)
+        }
+        
+        ## write back to the matrix
+        l_x[lower.tri(l_x)] <- values
+        l_x <- t(l_x)
+        l_x[lower.tri(l_x)] <- values
+      }
+      
+      ## for pearson/spearman correlation (incl. partial and
+      ## semi-partial), lasso, randomForest, clr, aracne and bayes
+      ## higher values corresond to higher confidence
+      if (grepl(name_x, pattern = "lasso|randomForest|bayes")) {
+        ## set values that are equal to 0 to NaN (values that are 0)
+        ## do not explain the variability
+        res <- getLinks(l_x, exclude = "== 0")
+      }
+      if (grepl(name_x, pattern = "pearson|spearman|clr|aracne")) {
+        res <- getLinks(l_x, exclude = NULL)
+      }
+      
+      res
+    })
+    
+    names(l_df) <- names(l)
+    
+    ## bind together the ranks of the models, stored in l_df
+    ranks <- lapply(l_df, function(x) x$rank)
+    ranks <- do.call("cbind", ranks)
+    colnames(ranks) <- names(l_df)
+    
+    ## calculate the consensus information, i.e. either get the first or
+    ## second top rank per row or calculate the average across rows
+    ## depending on the type argument
+    cons_val <- MetNet:::topKnet(ranks, type)
+    
+    ## bind row and col information with cons information
+    row_col <- l_df[[1]][, c("row", "col")]
+    ranks <- cbind(row_col, cons_val)
+    
+    ## get the top N features
+    n <- args$n
+    top_n <- sort(unique(cons_val))[1:n]
+    ranks_top <- ranks[cons_val %in% top_n, ]
+    
+    ## write links in ranks_top to binary adjacency matrix cons
+    cons <- matrix(0, nrow = ncol(l[[1]]), ncol = ncol(l[[1]]))
+    rownames(cons) <- colnames(cons) <- colnames(l[[1]])
+    cons[as.numeric(rownames(ranks_top))] <- 1
+    
+  }
+  
+  ## Changes to MetNet: A list is created as output containing 1/0 assigned values of 
+  ## model matrices (e.g. pearson and spearman) and consensus matrix
+  names(l) <- names(statistical)
+  l[["Consensus"]] <- cons
+  class(l[[3]]) <- "numeric"
+  return(l)
+  }
+  
+  
+  
+  
+threshold_new <- function(statistical, type, args,
                       values = c("all", "min", "max"), ...) {
     
     l <- statistical
