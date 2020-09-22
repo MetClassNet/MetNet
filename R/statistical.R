@@ -539,10 +539,10 @@ addToList <- function(l, name, object) {
 #' semipartial), Spearman correlation (also partial and semipartial)
 #' and score-based structure learning (Bayes). The function returns a
 #' list of adjacency matrices that are defined by `model`.
-#' Changes to MetNet:
-#' additional attribute in funtion: p; default is FALSE (so works like MetNet), if p is TRUE and model is spearman/pearson
-#' than the output will contain lists of pearson/spearman containing the corresponding correlation values (INCLUDING positive 
-#' and negative values) and p-values
+#' If `p` = TRUE and `model` == "pearson" or "spearman", than the output 
+#' contains pearson/spearman positive and negative correlation values and
+#' an additional list entry with their corresponding p-values
+#' (saved as "pearson_p" or "spearman_p")
 #'
 #' @param
 #' x `matrix` that contains intensity values of
@@ -553,6 +553,10 @@ addToList <- function(l, name, object) {
 #' (`"lasso"`, `"randomForest"`, `"clr"`, `"aracne"`, `"pearson"`,
 #' `"pearson_partial"`, `"pearson_semipartial"`, `"spearman"`,
 #' `"spearman_partial"`, `"spearman_semipartial"`, `"bayes"`)
+#' 
+#' @param 
+#' p `logical` by default set to FALSE, if set to TRUE p-values will
+#' be calculated, works only for `model` "pearson" or "spearman"
 #'
 #' @param
 #' ... parameters passed to the functions  `lasso`, `randomForest`,
@@ -579,9 +583,10 @@ addToList <- function(l, name, object) {
 #' will be used in `lasso`, `clr` and/or `aracne`.
 #'
 #' @return `list` containing the respective adjacency matrices specified by
-#' `model`
+#' `model` and `p`
 #'
 #' @author Thomas Naake, \email{thomasnaake@@googlemail.com}
+#' Liesa Salzer, \email{liesa.salzer@@helmholtz-muenchen.de}
 #'
 #' @examples
 #' data("x_test", package = "MetNet")
@@ -870,19 +875,13 @@ getLinks <- function(mat, exclude = "== 1") {
 #' For `type = "mean"`, the average rank in `statistical` is taken.
 #' Subsequently the first `n` unique ranks are returned.
 #' 
-#'Changes to MetNet: new attribute for type: "threshold_p"
-#'A list is created instead of a single matrix as output containing 1/0 assigned values of 
-#'model matrices (e.g. pearson and spearman) and consensus matrix.
-#'
-#'If "treshold_p" is selected in 'type' all values are assigned to 1 if their p-value 
-#'is BELOW a defined threshold (defined in'args')
-#'If "treshold" is selected in 'type' all values are assigned to 1 if their Correlation-value 
-#'is ABOVE a defined threshold (defined in'args')
 #'
 #' @return `matrix`, binary adjacency matrix given the links supported by the
 #' `type` and the `args`
 #'
-#' @author Thomas Naake, \email{thomasnaake@@googlemail.com}
+#' @author Thomas Naake, \email{thomasnaake@@googlemail.com},
+#' Liesa Salzer, \email{liesa.salzer@@helmholtz-muenchen.de}
+#' 
 #' @examples
 #' data("x_test", package = "MetNet")
 #' x <- x_test[1:10, 3:ncol(x_test)]
@@ -908,6 +907,7 @@ getLinks <- function(mat, exclude = "== 1") {
 threshold <- function(statistical, type, args,
                       values = c("all", "min", "max"), ...) {
   
+  ## checks if p values are included in list and deletes them
   if ( TRUE == any(endsWith(names(statistical), "_p"))) {
     l <- statistical[!endsWith(names(statistical), "_p")]
   }
@@ -1076,8 +1076,58 @@ threshold <- function(statistical, type, args,
   
 }
   
-  
+#' @name threshold_p
 #'
+#' @aliases threshold_p
+#'
+#' @title  Threshold the statistical adjacency matrices (using p-values)
+#'
+#' @description
+#' The function `threshold_p` takes as input a list of adjacency matrices
+#' as returned from the function `statistical`. 'threshold_p` will identify the 
+#' strongest link that are lower then a certain p-value threshold 
+#'
+#' @param statistical `list` containing adjacency matrices
+#'
+#'
+#' @param args `list` of arguments, has to contain thresholds for weighted
+#' adjacency matrices depending on the statistical model
+#' (a named list, where names are identical to `model`s in `statistical`)
+#' or a numerical
+#' vector of length 1 that denotes the number of top ranks written to the
+#' consensus matrix (a named list with entry `n`)
+#' 
+#'
+#' @param ... parameters passed to the function `consensus` in the
+#' `sna` package (only for `type = "threshold"`)
+#'
+#' @details
+#' `args` has to contain numeric vector of
+#' length 1 with names equal to `names(statistical)` for each `model`
+#' (`names(statistical)`) and the entry `threshold`, a numerical `vector(1)`
+#' to threshold the consensus
+#' matrix after using the `consensus` function from the `sna` package.
+#' 
+#'
+#' When combining the adjacency matrices the
+#' `threshold` value defines if an edge is reported or not. For
+#' `method = "central.graph"` threshold should be set to 1 by default. For other
+#' values of `method`, the value should be carefully defined by the user.
+#' 
+#'
+#' @return `matrix`, binary adjacency matrix given the links supported by the `args`
+#'
+#' @author Liesa Salzer, \email{liesa.salzer@@helmholtz-muenchen.de}
+#' 
+#' @examples
+#' data("x_test", package = "MetNet")
+#' x <- x_test[1:10, 3:ncol(x_test)]
+#' x <- as.matrix(x)
+#' model <- c("pearson", "spearman")
+#' l <- statistical(x, model = model, p = TRUE)
+#'
+#' args <- list("pearson_p" = 0.05, "spearman" = 0.05, threshold = 1)
+#' threshold_p(statistical = l, type = "threshold", args = args)
 #'
 #'
 #' @export 

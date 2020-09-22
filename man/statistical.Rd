@@ -15,12 +15,15 @@ features/metabolites (rows) per sample (columns).}
 `"pearson_partial"`, `"pearson_semipartial"`, `"spearman"`,
 `"spearman_partial"`, `"spearman_semipartial"`, `"bayes"`)}
 
+\item{p}{`logical` by default set to FALSE, if set to TRUE p-values will
+be calculated, works only for `model` "pearson" or "spearman"}
+
 \item{...}{parameters passed to the functions  `lasso`, `randomForest`,
 `clr`, `aracne`, `correlation` and/or `bayes`}
 }
 \value{
 `list` containing the respective adjacency matrices specified by
-`model`
+`model` and `p`
 }
 \description{
 The function `statitical` infers adjacency matrix topologies from
@@ -32,10 +35,10 @@ cellular networks (ARACNE), Pearson correlation (also partial and
 semipartial), Spearman correlation (also partial and semipartial)
 and score-based structure learning (Bayes). The function returns a
 list of adjacency matrices that are defined by `model`.
-Changes to MetNet:
-additional attribute in funtion: p; default is FALSE (so works like MetNet), if p is TRUE and model is spearman/pearson
-than the output will contain lists of pearson/spearman containing the corresponding correlation values (INCLUDING positive 
-and negative values) and p-values
+If `p` = TRUE and `model` == "pearson" or "spearman", than the output 
+contains pearson/spearman positive and negative correlation values and
+an additional list entry with their corresponding p-values
+(saved as "pearson_p" or "spearman_p")
 }
 \details{
 The function `statistical` includes functionality to calculate adjacency
@@ -66,4 +69,5 @@ statistical(x = x, model = c("pearson", "spearman"))
 }
 \author{
 Thomas Naake, \email{thomasnaake@googlemail.com}
+Liesa Salzer, \email{liesa.salzer@helmholtz-muenchen.de}
 }
