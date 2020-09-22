@@ -59,105 +59,51 @@
 #' combine(struct_adj, stat_adj)
 #'
 #' @export
-combine <- function(structural, statistical, threshold = 1, model = "combined", weighted_statistical) {
-    
-    ## Is changed since structural list is now lenght 3
-    if (!is.list(structural) | length(structural) != 3)
-        stop("structural is not a list of length 3")
-    
-    if (!is.matrix(structural[[1]]) | !is.numeric(structural[[1]]))
-        stop("structural[[1]] is not a numeric matrix")
-    
-    if (!is.matrix(structural[[2]]) | !is.character(structural[[2]]))
-        stop("structural[[2]] is not a character matrix")
-    
-    ## Additional to MetNet:
-    if (!is.matrix(statistical[[3]]) | !is.numeric(statistical[[3]]))
-        stop("statistical is not a numeric matrix")
-    
-    if (!all(rownames(structural[[1]]) == rownames(structural[[2]])))
-        stop(c("rownames of structural[[1]] are not identical to rownames of ",
-               "structural[[2]]"))
-    
-    if (!all(colnames(structural[[1]]) == colnames(structural[[2]])))
-        stop(c("colnames of structural[[1]] are not identical to colnames of ",
-               "structural[[2]]"))
-    
-    if (!all(rownames(structural[[1]]) == rownames(statistical)))
-        stop("rownames are not identical")
-    
-    if (!all(colnames(structural[[1]]) == colnames(statistical)))
-        stop("colnames are not identical")
-    
-    if (!is.numeric(threshold)) stop("threshold is not numeric")
-    
-    ## create list to store results
-    res <- list()
-    
-    
-    ## Changes to MetNet: Distinguish between default (model == "combined") and model = "pearson" or "spearman"
-    if(model == "pearson"){
-        
-        ## create the first entry of the list
-        ## sum the matrices structural and statistical, if the value is above
-        ## threshold then assign 1, otherwise 0
-        cons_num <- structural[[1]] + statistical[["pearson"]]
-        cons_num <- ifelse(cons_num > threshold, 1, 0)
-        
-        ## if p-values have previously been calculated
-        if("Correlation Value" %in% names(weighted_statistical[["pearson"]][1])){
-            cons_corr <- ifelse(cons_num == 1, weighted_statistical[["pearson"]][["Correlation Value"]], "")
-            cons_p <- ifelse(cons_num == 1, weighted_statistical[["pearson"]][["p-Value"]], "")}
-        else {
-            cons_corr <- ifelse(cons_num == 1, weighted_statistical[["pearson"]], "")
-            cons_p <- NaN
-        }}
-    
-    if(model == "spearman"){
-        ## create the first entry of the list
-        ## sum the matrices structural and statistical, if the value is above
-        ## threshold then assign 1, otherwise 0
-        cons_num <- structural[[1]] + statistical[["spearman"]]
-        cons_num <- ifelse(cons_num > threshold, 1, 0)
-        
-        ## if p-values have previously been calculated
-        if("Correlation Value" %in% names(weighted_statistical[["spearman"]][1])){
-            cons_corr <- ifelse(cons_num == 1, weighted_statistical[["spearman"]][["Correlation Value"]], "")
-            cons_p <- ifelse(cons_num == 1, weighted_statistical[["spearman"]][["p-Value"]], "")}
-        else {
-            cons_corr <- ifelse(cons_num == 1, weighted_statistical[["spearman"]], "")
-            cons_p <- NaN
-        }}
-    
-    
-    if(model == "combined"){
-        ## create the first entry of the list
-        ## sum the matrices structural and statistical, if the value is above
-        ## threshold then assign 1, otherwise 0
-        cons_num <- structural[[1]] + statistical[[3]]
-        cons_num <- ifelse(cons_num > threshold, 1, 0)
-        cons_corr <- NaN
-        cons_p <- NaN
-    }
-    
-    ## create the second entry of the list
-    ## if element in cons_num is equal to 1, take the element in structural[[2]]
-    ## (the type of link), otherwise ""
-    cons_char <- ifelse(cons_num == 1, structural[[2]], "")
-    
-    ## assign to list
-    ## Compared to MetNet names were assigned
-    res[[model]] <- cons_num
-    res[["Character"]] <- cons_char
-    
-    ## assign Correlation and p-values to list if model is "pearson" or "spearman"
-    if(model == "pearson" || model == "spearman"){
-        res[["Correlation Value"]] <- cons_corr
-        res[["p-Value"]] <- cons_p
-    }
-    
-    
-    return(res)
+combine <- function(structural, statistical, threshold = 1) {
+  
+  
+  if (!is.matrix(structural[[1]]) | !is.numeric(structural[[1]]))
+    stop("structural[[1]] is not a numeric matrix")
+  
+  
+  if (!is.matrix(statistical[["Consensus"]]) | !is.numeric(statistical[["Consensus"]]))
+    stop("statistical is not a numeric matrix")
+  
+  if (!all(rownames(structural[[1]]) == rownames(structural[[2]])))
+    stop(c("rownames of structural[[1]] are not identical to rownames of ",
+           "structural[[2]]"))
+  
+  if (!all(colnames(structural[[1]]) == colnames(structural[[2]])))
+    stop(c("colnames of structural[[1]] are not identical to colnames of ",
+           "structural[[2]]"))
+  
+  if (!all(rownames(structural[[1]]) == rownames(statistical)))
+    stop("rownames are not identical")
+  
+  if (!all(colnames(structural[[1]]) == colnames(statistical)))
+    stop("colnames are not identical")
+  
+  if (!is.numeric(threshold)) stop("threshold is not numeric")
+  
+  ## create list to store results
+  res <- list()
+  
+  ## create the first entry of the list
+  ## sum the matrices structural and statistical, if the value is above
+  ## threshold then assign 1, otherwise 0
+  cons_num <- structural[[1]] + statistical[["Consensus"]]
+  cons_num <- ifelse(cons_num > threshold, 1, 0)
+  
+  ## create the second entry of the list
+  ## if element in cons_num is equal to 1, take the element in structural[[2]]
+  ## (the type of link), otherwise ""
+  cons_char <- ifelse(cons_num == 1, structural[[2]], "")
+  
+  ## assign to list
+  res[[1]] <- cons_num
+  res[[2]] <- cons_char
+  
+  return(res)
 }
 
 

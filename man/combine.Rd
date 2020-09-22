@@ -4,13 +4,7 @@
 \alias{combine}
 \title{Combine structural and statistical adjacency matrix}
 \usage{
-combine(
-  structural,
-  statistical,
-  threshold = 1,
-  model = "combined",
-  weighted_statistical
-)
+combine(structural, statistical, threshold = 1)
 }
 \arguments{
 \item{structural}{list containing `numeric` structural adjacency matrix in
