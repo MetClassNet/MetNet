@@ -12,14 +12,6 @@
 #' \code{combine} returns this consensus matrix supported
 #' by the structural and statistical adjacency matrices.
 #' 
-#' Changes to MetNet: New attributes added, if model = "combined" (default) the result will be the same 
-#' as in MetNet, except the output list items were named to "combined" and "Character" 
-#' if model = "pearson" or "spearman" than also the corresponding weighted statistical 
-#' adjacency matrix is required as attribute (weighted_statistical = XY)
-#' The output in this case will be a list containing 4 listitems, where combination relies on the
-#' unweighted adjacency matrix of either Pearson or Spearman. 
-#' Moreover corresponding Correlation and p-values will be displayes as listitems
-#' 
 #'
 #' @param structural list containing `numeric` structural adjacency matrix in
 #' the first entry and `character` structural adjanceny matrix in the second
@@ -40,6 +32,7 @@
 #' `character` the corresonding type/putative link at this position.
 #'
 #' @author Thomas Naake, \email{thomasnaake@@googlemail.com}
+#' Liesa Salzer, \email{liesa.salzer@@helmholtz-muenchen.de}
 #'
 #' @examples
 #' data("x_test", package = "MetNet")
