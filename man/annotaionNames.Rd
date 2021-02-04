@@ -18,7 +18,7 @@ The function `annotationNames` adds available annotation values for all features
 to the adjacency list.
 }
 \details{
-annotaionNames adds annotation to the results of the adjacency list as additional column.
+annotaionNames adds annotation to an adjacency list as additional column.
 }
 \examples{
 data("x_test", package = "MetNet")

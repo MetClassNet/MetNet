@@ -21,6 +21,11 @@
 #'
 #' @param threshold numeric, threshold value to be applied to define a
 #' connection as present
+#' 
+#' @param model character, defines model that is used for building the consensus 
+#' matrix. The model is part of `statistical`. The default is "Consensus" which creates
+#' the consensus matrix by using a combination of models present in `statistical`. 
+#' Besides, "pearson" and "spearman" models were implemented.
 #'
 #' @details The matrices will be added and a unweighted connection will
 #' be reported when the value exceeds a certain value.
@@ -52,7 +57,7 @@
 #' combine(struct_adj, stat_adj)
 #'
 #' @export
-combine <- function(structural, statistical, threshold = 1) {
+combine <- function(structural, statistical, threshold = 1, model = "Consensus") {
   
   
   if (!is.matrix(structural[[1]]) | !is.numeric(structural[[1]]))
@@ -81,10 +86,12 @@ combine <- function(structural, statistical, threshold = 1) {
   ## create list to store results
   res <- list()
   
+  
+
   ## create the first entry of the list
   ## sum the matrices structural and statistical, if the value is above
   ## threshold then assign 1, otherwise 0
-  cons_num <- structural[[1]] + statistical[["Consensus"]]
+  cons_num <- structural[[1]] + statistical[[model]]
   cons_num <- ifelse(cons_num > threshold, 1, 0)
   
   ## create the second entry of the list
@@ -98,18 +105,6 @@ combine <- function(structural, statistical, threshold = 1) {
   
   return(res)
 }
-
-
-#' exportNet2gml is a function that exports adjacency matrices to gml using igraph
-#' Needs following attributes:
-#' x: adjacency matrix that needs to be exported
-#' from: originated from wich function, possible values are 
-#' - "structural" Produces a gml file with edge attributes containing mass difference values, data saved as "structural_type.gml"
-#' - "statistical+p" produces a gml file with edge attributes containing correlation values and p-values, saved as "statistical.'model'.gml"
-#' (TO DO: ADD "statistical")
-#' - "combine" produces a gml file with edge attributes containing correlation and p-values for pearson/ spearman correlations, 
-#' saved as "combined.gml"
-
 
 
 #' @name adjacency_list
@@ -165,7 +160,7 @@ adjacency_list <- function(x, from){
         list_type <- reshape2::melt(x[[2]]) %>% filter(Var1 != Var2) %>% filter(value != '')
         list_mass <- reshape2::melt(x[[3]]) %>% filter(Var1 != Var2) %>% filter(value != '')
         combine <- merge(list_type, list_mass, by = c("Var1", "Var2"))
-        colnames(combine) <- c("Var1", "Var2", "value", "mass difference")
+        colnames(combine) <- c("Var1", "Var2", "value", "mass-difference")
         return(combine)
     }
     else if ("statistical" %in% from) {
@@ -190,17 +185,11 @@ adjacency_list <- function(x, from){
     }
     else if ("combine" %in% from){
         x[[2]][upper.tri(x[[2]])] <- ''
-        x[[3]][upper.tri(x[[3]])] <- ''
-        x[[4]][upper.tri(x[[4]])] <- ''
         
         list_mass <- reshape2::melt(x[[2]]) %>% filter(Var1 != Var2) %>% filter(value != '')
-        list_corr <- reshape2::melt(x[[3]]) %>% filter(Var1 != Var2) %>% filter(value != '')
-        list_p    <- reshape2::melt(x[[4]]) %>% filter(Var1 != Var2) %>% filter(value != '')
-        combine <- merge(list_mass, list_corr, by = c("Var1", "Var2"))
-        colnames(combine) <- c("Var1", "Var2", "value", "Correlation Value")
-        combine <- merge(combine, list_p, by = c("Var1", "Var2"))
-        colnames(combine) <- c("Var1", "Var2", "value", "Correlation Value", "p-Value")
-        return(combine)
+        colnames(list_mass) <- c("Var1", "Var2", "value")
+
+        return(list_mass)
         
     }
     
@@ -238,7 +227,8 @@ adjacency_list <- function(x, from){
 #' The default is filter = F, so the unfiltered summary will be returned. 
 #' If filter is set to a `number`, e.g. 1000 only mz differences above 
 #' this threshold will be displayed. 
-#'
+#' The function can be applied for adjacency lists from `structural` and `combine`
+#' 
 #' @return 
 #' `data.frame` containing the numbers of present mz differences and
 #' corresponding name. Also a plot will be displayed.
@@ -323,7 +313,7 @@ summary_mz <- function(adjacency_list, filter = F, ...){
 #' 
 #'
 #' @details
-#' annotaionNames adds annotation to the results of the adjacency list as additional column. 
+#' annotaionNames adds annotation to an adjacency list as additional column. 
 #'
 #' @return `data.frame` containing the the `list`-values and additional column with annotations
 #'
@@ -338,7 +328,6 @@ summary_mz <- function(adjacency_list, filter = F, ...){
 #' annotationNames(list = adj_l, names = annotationFile)
 #' 
 #' @export
-# Function to add annotation names
 annotaionNames <- function (list, names) {
     Var1_names <- c()
     

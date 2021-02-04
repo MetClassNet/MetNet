@@ -4,7 +4,7 @@
 \alias{combine}
 \title{Combine structural and statistical adjacency matrix}
 \usage{
-combine(structural, statistical, threshold = 1)
+combine(structural, statistical, threshold = 1, model = "Consensus")
 }
 \arguments{
 \item{structural}{list containing `numeric` structural adjacency matrix in
@@ -15,6 +15,11 @@ entry}
 
 \item{threshold}{numeric, threshold value to be applied to define a
 connection as present}
+
+\item{model}{character, defines model that is used for building the consensus 
+matrix. The model is part of `statistical`. The default is "Consensus" which creates
+the consensus matrix by using a combination of models present in `statistical`. 
+Besides, "pearson" and "spearman" models were implemented.}
 }
 \value{
 `list`, in the first entry `matrix` of type `numeric`containing the
@@ -55,4 +60,5 @@ combine(struct_adj, stat_adj)
 }
 \author{
 Thomas Naake, \email{thomasnaake@googlemail.com}
+Liesa Salzer, \email{liesa.salzer@helmholtz-muenchen.de}
 }

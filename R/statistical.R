@@ -960,16 +960,7 @@ threshold <- function(statistical, type, args,
       ## get corresponding threshold in args
       threshold_x <- args[[names(l)[x]]]
       
-      if( TRUE %in% any(endsWith(names(l), "_p"))) {
-        ## get corresponding adjacency matrix of Correlation Values in l
-        ## is used when statistical was calculated with p=TRUE
-        li <- l[endsWith(names(l), "corr")]
-        l_x <- li[[name_x]]
-        
-        ## only assign 1 to values that are above the threshold
-        ifelse(l_x > threshold_x, 1, 0)
-      } 
-      else{
+
         ## get corresponding adjacency matrix in l
         ## corresponds to MetNet function
         l_x <- l[[name_x]]
@@ -978,7 +969,7 @@ threshold <- function(statistical, type, args,
         ## values corresond to higher confidence
         ## only assign 1 to values that are above the threshold
         ifelse(l_x > threshold_x, 1, 0)
-      }
+    
       
     })
     
@@ -1087,19 +1078,15 @@ threshold <- function(statistical, type, args,
 #' as returned from the function `statistical`. 'threshold_p` will identify the 
 #' strongest link that are lower then a certain p-value threshold 
 #'
-#' @param statistical `list` containing adjacency matrices
-#'
+#' @param statistical `list` containing adjacency matrices that contains p-values
 #'
 #' @param args `list` of arguments, has to contain thresholds for weighted
 #' adjacency matrices depending on the statistical model
 #' (a named list, where names are identical to `model`s in `statistical`)
-#' or a numerical
-#' vector of length 1 that denotes the number of top ranks written to the
-#' consensus matrix (a named list with entry `n`)
+#' For example "pearson_p" is the corresponding name for pearson p-values
 #' 
-#'
 #' @param ... parameters passed to the function `consensus` in the
-#' `sna` package (only for `type = "threshold"`)
+#' `sna` package 
 #'
 #' @details
 #' `args` has to contain numeric vector of
@@ -1109,10 +1096,8 @@ threshold <- function(statistical, type, args,
 #' matrix after using the `consensus` function from the `sna` package.
 #' 
 #'
-#' When combining the adjacency matrices the
-#' `threshold` value defines if an edge is reported or not. For
-#' `method = "central.graph"` threshold should be set to 1 by default. For other
-#' values of `method`, the value should be carefully defined by the user.
+#' When combining the adjacency matrices the `threshold` value defines if an 
+#' edge is reported or not. The value should be carefully defined by the user.
 #' 
 #'
 #' @return `matrix`, binary adjacency matrix given the links supported by the `args`
@@ -1131,49 +1116,67 @@ threshold <- function(statistical, type, args,
 #'
 #'
 #' @export 
-threshold_p <- function(statistical,  args, ...) {
-  #if (FALSE == any(endsWith(names(statistical), "_p")) )
-  #  stop{"no p-Values available"}
+threshold_p <- function(statistical, args, ...) {
   
+  ## checks if p values are included
+  if ( TRUE != any(endsWith(names(statistical), "_p"))) {
+    stop("p-values missing")
+  }
   
-  # else 
-  l <- statistical[endsWith(names(statistical), "_p")]
+  else {  l <- statistical[endsWith(names(statistical), "_p")]
+}
+  if ( TRUE != any(endsWith(names(args), "_p"))) {
+    stop("Please use `_p` arguments")
+  }
   
+  ## or a list of threshold
+  if (any(duplicated(names(args)))) {
+    stop("names(args) contain duplicated entries")
+  }
   
-  ## iterate through the list and remove the links below or above the
-  ## threshold and write to list
-  l <- lapply(seq_along(l), function(x) {
+
+    ## iterate through the list and remove the links below or above the
+    ## threshold and write to list
+    l <- lapply(seq_along(l), function(x) {
+      
+      
+      
+      ## find corresponding model in l
+      name_x <- names(l)[x]
+      
+      ## get corresponding threshold in args
+      threshold_x <- args[[name_x]]
+      
+  
+        ## get corresponding adjacency matrix in l
+        ## corresponds to MetNet function
+        l_x <- l[[name_x]]
+        ## for pearson/spearman correlation models (incl. partial and
+        ## semi-partial), lasso, randomForest, clr, aracne and bayes higher
+        ## values corresond to higher confidence
+        ## only assign 1 to values that are above the threshold
+        ifelse(l_x < threshold_x, 1, 0)
+      
+      
+    })
     
-    ## find corresponding model in l
-    name_x <- names(l)[x]
+    ## allow for compatibility of arguments
+    ## calculate consenses from the binary matrices
+    cons <- threeDotsCall(sna::consensus, dat = l, ...)
     
-    ## get corresponding threshold in args
-    threshold_x <- args[[names(l)[x]]]
+    ## threshold consensus that it is a binary matrix
+    cons <- ifelse(cons >= args$threshold, 1, 0)
     
+    rownames(cons) <- colnames(cons) <- colnames(l[[1]])
     
-    l_x <- l[[name_x]]
-    
-    ## only assign 1 to values that are below the threshold
-    ifelse(l_x < threshold_x, 1, 0)
-  })
-  
-  ## allow for compatibility of arguments
-  ## calculate consenses from the binary matrices
-  cons <- threeDotsCall(sna::consensus, dat = l, ...)
-  
-  ## threshold consensus that it is a binary matrix
-  cons <- ifelse(cons >= args$threshold, 1, 0)
-  
-  rownames(cons) <- colnames(cons) <- colnames(l[[1]])
-  
   
   
   names(l) <- names(statistical[!endsWith(names(statistical), "_p")])
   l[["Consensus"]] <- cons
-  
+  #class(l[[3]]) <- "numeric"
   return(l)
+  
 }
-    
 #' @name topKnet
 #' @aliases topKnet
 #' @title Return consensus ranks from a matrix containing ranks

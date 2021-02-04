@@ -7,17 +7,15 @@
 threshold_p(statistical, args, ...)
 }
 \arguments{
-\item{statistical}{`list` containing adjacency matrices}
+\item{statistical}{`list` containing adjacency matrices that contains p-values}
 
 \item{args}{`list` of arguments, has to contain thresholds for weighted
 adjacency matrices depending on the statistical model
 (a named list, where names are identical to `model`s in `statistical`)
-or a numerical
-vector of length 1 that denotes the number of top ranks written to the
-consensus matrix (a named list with entry `n`)}
+For example "pearson_p" is the corresponding name for pearson p-values}
 
 \item{...}{parameters passed to the function `consensus` in the
-`sna` package (only for `type = "threshold"`)}
+`sna` package}
 }
 \value{
 `matrix`, binary adjacency matrix given the links supported by the `args`
@@ -35,10 +33,8 @@ to threshold the consensus
 matrix after using the `consensus` function from the `sna` package.
 
 
-When combining the adjacency matrices the
-`threshold` value defines if an edge is reported or not. For
-`method = "central.graph"` threshold should be set to 1 by default. For other
-values of `method`, the value should be carefully defined by the user.
+When combining the adjacency matrices the `threshold` value defines if an 
+edge is reported or not. The value should be carefully defined by the user.
 }
 \examples{
 data("x_test", package = "MetNet")
