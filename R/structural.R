@@ -223,7 +223,7 @@ rtCorrection <- function(structural, x, transformation) {
 
     ## check arguments
     if (!is.list(structural)) stop("structural is not a list")
-    if (!length(structural) == 2) stop("structural is not a list of length 2")
+    #if (!length(structural) == 2) stop("structural is not a list of length 2")
     ## allocate structural[[1]] and structural[[2]] to adj and group
     adj <- structural[[1]]
     group <- structural[[2]]
